@@ -98,14 +98,11 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
   }
 
   @override
-       Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return ValueListenableBuilder<AppSettingsData>(
       valueListenable: AppSettingsStore.instance,
       builder: (context, settings, _) {
         final isBn = settings.selectedLanguage == 'বাংলা';
-        final activeAlerts =
-            (settings.weatherAlertsEnabled ? 1 : 0) +
-            (settings.priceAlertsEnabled ? 1 : 0);
 
         return PopScope(
           canPop: false,
@@ -114,69 +111,15 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
           },
           child: Scaffold(
             appBar: AppBar(
+              titleSpacing: 0,
               backgroundColor: const Color(0xFF1B5E20),
               foregroundColor: Colors.white,
-              title: Text(isBn ? 'কৃষক প্যানেল' : 'Farmer Panel'),
+              title: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(isBn ? 'কৃষক প্যানেল' : 'Farmer Panel'),
+              ),
               actions: [
-                if (settings.notificationsEnabled)
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isBn
-                                    ? 'আপনার $activeAlerts টি সক্রিয় অ্যালার্ট আছে'
-                                    : 'You have $activeAlerts active alerts',
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                      ),
-                      if (activeAlerts > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            width: 16,
-                            height: 16,
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '$activeAlerts',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  )
-                else
-                  IconButton(
-                    icon: const Icon(Icons.notifications_off),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            isBn
-                                ? 'সেটিংস থেকে নোটিফিকেশন বন্ধ করা আছে'
-                                : 'Notifications are disabled from settings',
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                  ),
                 PopupMenuButton<String>(
                   tooltip: isBn ? 'প্রোফাইল মেনু' : 'Profile menu',
                   onSelected: (value) {
@@ -294,7 +237,19 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                   ),
                 ),
                 Positioned.fill(
-                  child: Container(color: Colors.black.withOpacity(0.35)),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.24),
+                          Colors.black.withOpacity(0.12),
+                          Colors.black.withOpacity(0.06),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 Positioned.fill(
                   child: AnimatedSwitcher(
@@ -350,8 +305,15 @@ class _FarmerHome extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
-                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white.withOpacity(0.92),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.10),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
@@ -409,10 +371,11 @@ class _FarmerHome extends StatelessWidget {
                               title: bn ? 'মোট পোস্ট' : 'Total Posts',
                               value: '${docs.length}',
                               colors: const [
-                                Color(0xFFD1FAE5),
-                                Color(0xFFB7E4D3),
+                                Color(0xFFF7FBF7),
+                                Color(0xFFE2F4E8),
                               ],
                               icon: Icons.eco,
+                              accentColor: const Color(0xFF43A047),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -421,10 +384,11 @@ class _FarmerHome extends StatelessWidget {
                               title: bn ? 'সক্রিয় পোস্ট' : 'Active Posts',
                               value: '$active',
                               colors: const [
-                                Color(0xFFDBEAFE),
-                                Color(0xFFBFDBFE),
+                                Color(0xFFF8FBFF),
+                                Color(0xFFE3EFFD),
                               ],
                               icon: Icons.check_circle,
+                              accentColor: const Color(0xFF3B82F6),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -433,10 +397,11 @@ class _FarmerHome extends StatelessWidget {
                               title: bn ? 'বিক্রি' : 'Sold',
                               value: '$sold',
                               colors: const [
-                                Color(0xFFDFF5FB),
-                                Color(0xFFBCE5F1),
+                                Color(0xFFFFFBF4),
+                                Color(0xFFFFECD2),
                               ],
                               icon: Icons.done_all,
+                              accentColor: const Color(0xFFF59E0B),
                             ),
                           ),
                         ],
@@ -458,20 +423,22 @@ class _FarmerHome extends StatelessWidget {
                           _DashboardActionButton(
                             icon: Icons.add,
                             label: bn ? 'নতুন ফসল পোস্ট করুন' : 'Post New Crop',
-                            background: const Color(0xFF50B96C),
+                            background: const Color(0xFFD9F6DE),
+                            foreground: const Color(0xFF14532D),
                             onTap: () => onNavigate(1),
                           ),
                           _DashboardActionButton(
                             icon: Icons.show_chart_rounded,
                             label: bn ? 'ফসলের দাম দেখুন' : 'View Prices',
-                            background: const Color(0xFF3B82F6),
+                            background: const Color(0xFFDCEBFF),
+                            foreground: const Color(0xFF1E3A8A),
                             onTap: () => onNavigate(3),
                           ),
                           _DashboardActionButton(
                             icon: Icons.format_list_bulleted,
                             label: bn ? 'আমার পোস্ট দেখুন' : 'View My Posts',
-                            background: const Color(0xFFEABE36),
-                            foreground: const Color(0xFF111827),
+                            background: const Color(0xFFFFE9B8),
+                            foreground: const Color(0xFF7C2D12),
                             onTap: () => onNavigate(2),
                           ),
                         ],
@@ -481,19 +448,43 @@ class _FarmerHome extends StatelessWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withOpacity(0.84),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF7DD3FC)),
+                          border: Border.all(color: const Color(0xFFA5D8FF)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              bn ? '🌦 আবহাওয়া পরামর্শ' : '🌦 Weather Advice',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF374151),
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    bn
+                                        ? '🌦 আবহাওয়া পরামর্শ'
+                                        : '🌦 Weather Advice',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF374151),
+                                    ),
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: () => onNavigate(4),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF2563EB),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.chevron_right,
+                                    size: 18,
+                                  ),
+                                  label: Text(bn ? 'আরও দেখুন' : 'See more'),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 8),
                             _AlertTile(
@@ -568,12 +559,14 @@ class _GradientStatCard extends StatelessWidget {
   final String value;
   final List<Color> colors;
   final IconData icon;
+  final Color accentColor;
 
   const _GradientStatCard({
     required this.title,
     required this.value,
     required this.colors,
     required this.icon,
+    required this.accentColor,
   });
 
   @override
@@ -583,13 +576,21 @@ class _GradientStatCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: colors),
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withOpacity(0.6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Align(
             alignment: Alignment.centerRight,
-            child: Icon(icon, color: Colors.white.withOpacity(0.65), size: 22),
+            child: Icon(icon, color: accentColor.withOpacity(0.75), size: 22),
           ),
           Text(
             value,
@@ -597,14 +598,14 @@ class _GradientStatCard extends StatelessWidget {
               fontSize: 34,
               height: 1,
               fontWeight: FontWeight.w900,
-              color: Colors.white,
+              color: Color(0xFF111827),
             ),
           ),
           const SizedBox(height: 6),
           Text(
             title,
             style: const TextStyle(
-              color: Colors.white,
+              color: Color(0xFF374151),
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
@@ -637,10 +638,12 @@ class _DashboardActionButton extends StatelessWidget {
       icon: Icon(icon),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        backgroundColor: background,
+        backgroundColor: background.withOpacity(0.85),
         foregroundColor: foreground,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -703,18 +706,25 @@ class _TodayPricesPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const rows = [
-      ['মিষ্টি কুমড়া', 'Thakurgaon', '৳55.00/kg'],
-      ['লাউ', 'Thakurgaon', '৳55.00/kg'],
-      ['শশা', 'Thakurgaon', '৳55.00/kg'],
-      ['শিম', 'Thakurgaon', '৳55.00/kg'],
-      ['মরিচ', 'Thakurgaon', '৳55.00/kg'],
+      ['মিষ্টি কুমড়া', 'ঠাকুরগাঁও', '৳55.00/kg'],
+      ['লাউ', 'ঠাকুরগাঁও', '৳55.00/kg'],
+      ['শশা', 'ঠাকুরগাঁও', '৳55.00/kg'],
+      ['শিম', 'ঠাকুরগাঁও', '৳55.00/kg'],
+      ['মরিচ', 'ঠাকুরগাঁও', '৳55.00/kg'],
     ];
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withOpacity(0.84),
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -794,8 +804,15 @@ class _RecentPostsPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withOpacity(0.84),
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -168,14 +168,14 @@ class _WeatherData {
 
 // ─── Weather page ─────────────────────────────────────────────────────────────
 
-class FarmerWeatherPage extends StatefulWidget {
-  const FarmerWeatherPage({super.key});
+class BuyerWeatherPage extends StatefulWidget {
+  const BuyerWeatherPage({super.key});
 
   @override
-  State<FarmerWeatherPage> createState() => _FarmerWeatherPageState();
+  State<BuyerWeatherPage> createState() => _BuyerWeatherPageState();
 }
 
-class _FarmerWeatherPageState extends State<FarmerWeatherPage> {
+class _BuyerWeatherPageState extends State<BuyerWeatherPage> {
   String? _selectedEn; // use 'en' string as dropdown value
   Map<String, String>? _selectedDistrict;
   _WeatherData? _weather;

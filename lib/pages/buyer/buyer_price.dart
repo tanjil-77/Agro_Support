@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class BuyerPricePage extends StatefulWidget {
@@ -8,8 +9,24 @@ class BuyerPricePage extends StatefulWidget {
 }
 
 class _BuyerPricePageState extends State<BuyerPricePage> {
-  static const String _allCropsLabel = 'সব ফসল দেখুন';
-  static const String _allDistrictsLabel = 'সব জেলা দেখুন';
+  static const Color _bannerStart = Color(0xFF6FCF97);
+  static const Color _bannerEnd = Color(0xFF43B07C);
+  static const Color _cardGreenStart = Color(0xFF76C893);
+  static const Color _cardGreenEnd = Color(0xFF52B69A);
+  static const Color _priceOrange = Color(0xFFF5A524);
+  static const Color _accentBlue = Color(0xFF1D4ED8);
+  static const String _allCropsLabel = 'ফসল নির্বাচন করুন';
+  static const String _allDistrictsLabel = 'জেলা নির্বাচন করুন';
+
+  static const List<String> _marketNames = [
+    'সদর বাজার',
+    'নতুন বাজার',
+    'পুরাতন বাজার',
+    'কাঁচাবাজার',
+    'পাইকারি বাজার',
+    'কৃষক বাজার',
+    'হাট বাজার',
+  ];
 
   static const List<String> _districts = [
     'ঢাকা',
@@ -160,7 +177,7 @@ class _BuyerPricePageState extends State<BuyerPricePage> {
   }
 
   String _formatCurrency(double amount) {
-    return amount.toStringAsFixed(2);
+    return _toBnDigits(amount.toStringAsFixed(2));
   }
 
   String _monthShort(int month) {
@@ -182,7 +199,29 @@ class _BuyerPricePageState extends State<BuyerPricePage> {
   }
 
   String _formatDate(DateTime dt) {
-    return '${dt.day} ${_monthShort(dt.month)} ${dt.year}';
+    final day = _toBnDigits(dt.day.toString());
+    final year = _toBnDigits(dt.year.toString());
+    return '$day ${_monthShort(dt.month)} $year';
+  }
+
+  String _toBnDigits(String input) {
+    const map = {
+      '0': '০',
+      '1': '১',
+      '2': '২',
+      '3': '৩',
+      '4': '৪',
+      '5': '৫',
+      '6': '৬',
+      '7': '৭',
+      '8': '৮',
+      '9': '৯',
+    };
+    final buffer = StringBuffer();
+    for (final char in input.split('')) {
+      buffer.write(map[char] ?? char);
+    }
+    return buffer.toString();
   }
 
   IconData _trendIcon(TrendDirection trend) {
@@ -207,9 +246,607 @@ class _BuyerPricePageState extends State<BuyerPricePage> {
     }
   }
 
+  int _gridCountForWidth(double width) {
+    if (width >= 1200) {
+      return 4;
+    }
+    if (width >= 900) {
+      return 3;
+    }
+    if (width >= 600) {
+      return 2;
+    }
+    return 1;
+  }
+
+  String _trendLabel(TrendDirection trend) {
+    switch (trend) {
+      case TrendDirection.up:
+        return 'উর্ধ্বমুখী';
+      case TrendDirection.down:
+        return 'নিম্নমুখী';
+      case TrendDirection.stable:
+        return 'স্থিতিশীল';
+    }
+  }
+
+  String _unitLabel(String unit) {
+    switch (unit) {
+      case 'kg':
+        return 'কেজি';
+      case 'piece':
+        return 'পিস';
+      case 'mon':
+        return 'মণ';
+      default:
+        return unit;
+    }
+  }
+
+  String _marketForEntry(_CropPriceEntry entry) {
+    final seed = entry.cropName.hashCode.abs() + entry.district.hashCode.abs();
+    return _marketNames[seed % _marketNames.length];
+  }
+
+  Widget _buildHeroBanner() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _bannerStart.withOpacity(0.62),
+            _bannerEnd.withOpacity(0.62),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.auto_graph_rounded,
+              color: Colors.white,
+              size: 26,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'ফসলের বাজার দর',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'বিভিন্ন জেলা অনুযায়ী ফসলের সর্বশেষ মূল্য তথ্য দেখুন',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withOpacity(0.75),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchCard(
+    double width,
+    List<String> cropOptions,
+    List<String> districtOptions,
+  ) {
+    final isWide = width >= 760;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2F2EA).withOpacity(0.55),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.search_rounded,
+                  color: Color(0xFF148F60),
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ফসল ও জেলা ভিত্তিক খুঁজুন',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    Text(
+                      'সর্বশেষ বাজার দর দেখতে আপনার পছন্দের তথ্য দিন',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (isWide)
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDropdown(
+                    label: 'ফসল নির্বাচন করুন',
+                    value: _selectedCrop,
+                    items: cropOptions,
+                    icon: Icons.eco_rounded,
+                    onChanged: (value) {
+                      if (value == null) {
+                        return;
+                      }
+                      setState(() => _selectedCrop = value);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildDropdown(
+                    label: 'জেলা নির্বাচন করুন',
+                    value: _selectedDistrict,
+                    items: districtOptions,
+                    icon: Icons.location_on_rounded,
+                    onChanged: (value) {
+                      if (value == null) {
+                        return;
+                      }
+                      setState(() => _selectedDistrict = value);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(width: 140, height: 48, child: _buildSearchButton()),
+              ],
+            )
+          else
+            Column(
+              children: [
+                _buildDropdown(
+                  label: 'ফসল নির্বাচন করুন',
+                  value: _selectedCrop,
+                  items: cropOptions,
+                  icon: Icons.eco_rounded,
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+                    setState(() => _selectedCrop = value);
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildDropdown(
+                  label: 'জেলা নির্বাচন করুন',
+                  value: _selectedDistrict,
+                  items: districtOptions,
+                  icon: Icons.location_on_rounded,
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+                    setState(() => _selectedDistrict = value);
+                  },
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: _buildSearchButton(),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchButton() {
+    return ElevatedButton.icon(
+      onPressed: _applyFilter,
+      icon: const Icon(Icons.search_rounded),
+      label: const Text('খুঁজুন'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _accentBlue,
+        foregroundColor: Colors.white,
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required IconData icon,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      icon: const Icon(Icons.keyboard_arrow_down_rounded),
+      items: items
+          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .toList(),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 18),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.4),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFF60A5FA)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultHeader(int count) {
+    return Row(
+      children: [
+        const Icon(Icons.grid_view_rounded, color: Color(0xFF0F172A)),
+        const SizedBox(width: 8),
+        const Text(
+          'সর্বশেষ বাজার দর',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '${_toBnDigits(count.toString())} টি ফলাফল',
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF475569),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.96),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.search_off_rounded,
+            size: 34,
+            color: Color(0xFF94A3B8),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'কোনো ফলাফল পাওয়া যায়নি',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'অন্য ফসল বা জেলা বেছে নিয়ে আবার খুঁজুন',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.black.withOpacity(0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceCard(_CropPriceEntry entry) {
+    final unitLabel = _unitLabel(entry.unit);
+    final marketName = _marketForEntry(entry);
+    final lastPrice = _formatCurrency(
+      entry.avgPrice > 1 ? entry.avgPrice - 1 : entry.avgPrice,
+    );
+    final marketPrice = _formatCurrency(entry.avgPrice);
+    final highestPrice = _formatCurrency(entry.maxPrice);
+    final lowestPrice = _formatCurrency(entry.minPrice);
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.75),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  _cardGreenStart.withOpacity(0.7),
+                  _cardGreenEnd.withOpacity(0.7),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(14),
+                topRight: Radius.circular(14),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${entry.emoji} ${entry.cropName}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE11D48).withOpacity(0.75),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on_rounded,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            entry.district,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.store_rounded,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            marketName,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.payments_rounded,
+                        size: 14,
+                        color: Color(0xFF64748B),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'সর্বশেষ দর',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '৳$lastPrice',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.arrow_upward_rounded,
+                        size: 14,
+                        color: Color(0xFF16A34A),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'সর্বোচ্চ ৳$highestPrice',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF16A34A),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        _formatDate(entry.updatedAt),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.arrow_downward_rounded,
+                        size: 14,
+                        color: Color(0xFFDC2626),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'সর্বনিম্ন ৳$lowestPrice',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFDC2626),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+            decoration: BoxDecoration(
+              color: _priceOrange.withOpacity(0.72),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(14),
+                bottomRight: Radius.circular(14),
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'প্রতি $unitLabel',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.85),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '৳$marketPrice',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final districts = [_allDistrictsLabel, ..._districts];
+    final width = MediaQuery.of(context).size.width;
+    final gridCount = _gridCountForWidth(width);
+    final cardHeight = width < 600 ? 260.0 : 240.0;
+    final cropOptions = _cropOptions;
+    final districtOptions = [_allDistrictsLabel, ..._districts];
 
     return Column(
       children: [
@@ -218,399 +855,47 @@ class _BuyerPricePageState extends State<BuyerPricePage> {
           child: Stack(
             children: [
               Positioned.fill(
-                child: Image.network(
-                  'https://thumbs.dreamstime.com/b/smart-agriculture-technology-digital-farming-agritech-solutions-field-precision-324410581.jpg',
+                child: CachedNetworkImage(
+                  imageUrl:
+                      'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1920&q=80',
                   fit: BoxFit.cover,
+                  errorWidget: (_, __, ___) =>
+                      Container(color: const Color(0xFF1B5E20)),
                 ),
               ),
-              Positioned.fill(child: Container(color: const Color(0x26FFFFFF))),
-              ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xF266C18C), Color(0xF25AC5B5)],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.show_chart_rounded,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'ফসলের বাজার দর',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 32,
-                                height: 1.1,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'নিজের এলাকায় আজকের সর্বশেষ দাম তথ্য দেখুন',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFF6FC194),
-                        width: 2,
-                      ),
-                      color: const Color(0xAAFFFFFF),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'ফসল ও জেলা ভিত্তিক খুঁজুন',
-                          style: TextStyle(
-                            color: Color(0xFF1E8F5A),
-                            fontWeight: FontWeight.w800,
-                            fontSize: 22,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'ফসল ও জেলা নির্বাচন করে বাজার দর দেখুন',
-                          style: TextStyle(
-                            color: Color(0xFF4B5563),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final isWide = constraints.maxWidth > 780;
-                            final dropDownStyle = InputDecoration(
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 12,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFD1D5DB),
-                                ),
-                              ),
-                            );
-
-                            final cropDropdown =
-                                DropdownButtonFormField<String>(
-                                  value: _selectedCrop,
-                                  decoration: dropDownStyle.copyWith(
-                                    labelText: 'ফসল নির্বাচন',
-                                    prefixIcon: const Icon(
-                                      Icons.eco_outlined,
-                                      size: 18,
-                                    ),
-                                  ),
-                                  items: _cropOptions
-                                      .map(
-                                        (crop) => DropdownMenuItem(
-                                          value: crop,
-                                          child: Text(crop),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: (value) {
-                                    if (value == null) return;
-                                    setState(() => _selectedCrop = value);
-                                  },
-                                );
-
-                            final districtDropdown =
-                                DropdownButtonFormField<String>(
-                                  value: _selectedDistrict,
-                                  decoration: dropDownStyle.copyWith(
-                                    labelText: 'জেলা নির্বাচন',
-                                    prefixIcon: const Icon(
-                                      Icons.location_on_outlined,
-                                      size: 18,
-                                    ),
-                                  ),
-                                  items: districts
-                                      .map(
-                                        (district) => DropdownMenuItem(
-                                          value: district,
-                                          child: Text(district),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: (value) {
-                                    if (value == null) return;
-                                    setState(() => _selectedDistrict = value);
-                                  },
-                                );
-
-                            final searchButton = SizedBox(
-                              height: 48,
-                              child: ElevatedButton.icon(
-                                onPressed: _applyFilter,
-                                icon: const Icon(Icons.search_rounded),
-                                label: const Text('খুঁজুন'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF0D6EFD),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                            );
-
-                            if (isWide) {
-                              return Row(
-                                children: [
-                                  Expanded(child: cropDropdown),
-                                  const SizedBox(width: 10),
-                                  Expanded(child: districtDropdown),
-                                  const SizedBox(width: 10),
-                                  SizedBox(width: 160, child: searchButton),
-                                ],
-                              );
-                            }
-
-                            return Column(
-                              children: [
-                                cropDropdown,
-                                const SizedBox(height: 10),
-                                districtDropdown,
-                                const SizedBox(height: 10),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: searchButton,
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'মোট ফলাফল: ${_filteredEntries.length}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final width = constraints.maxWidth;
-                      final isCompactMobile = width < 430;
-                      final crossAxisCount = width >= 1180
-                          ? 3
-                          : width >= 700
-                          ? 2
-                          : 1;
-                      final cardMainAxisExtent = width >= 1180
-                          ? 430.0
-                          : width >= 700
-                          ? 445.0
-                          : 470.0;
-
-                      return GridView.builder(
+              Positioned.fill(
+                child: Container(color: Colors.black.withOpacity(0.2)),
+              ),
+              SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildHeroBanner(),
+                    const SizedBox(height: 16),
+                    _buildSearchCard(width, cropOptions, districtOptions),
+                    const SizedBox(height: 16),
+                    _buildResultHeader(_filteredEntries.length),
+                    const SizedBox(height: 12),
+                    if (_filteredEntries.isEmpty)
+                      _buildEmptyState()
+                    else
+                      GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: _filteredEntries.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
+                          crossAxisCount: gridCount,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          mainAxisExtent: cardMainAxisExtent,
+                          mainAxisExtent: cardHeight,
                         ),
                         itemBuilder: (context, i) {
-                          final entry = _filteredEntries[i];
-
-                          return Card(
-                            margin: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: const BorderSide(
-                                color: Color(0xFF8ECDA8),
-                                width: 1.5,
-                              ),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color(0xFF63C58B),
-                                        Color(0xFF58C9BE),
-                                      ],
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${entry.emoji} ${entry.cropName}',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          color: Colors.white,
-                                          fontSize: isCompactMobile ? 18 : 20,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFD54C53),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '📍${entry.district}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    color: const Color(0xFFF5F8F6),
-                                    padding: const EdgeInsets.all(12),
-                                    child: Column(
-                                      children: [
-                                        _PriceMetaRow(
-                                          title: 'সর্বনিম্ন দাম',
-                                          value: _formatCurrency(
-                                            entry.minPrice,
-                                          ),
-                                          icon: Icons.arrow_downward_rounded,
-                                          color: const Color(0xFF2E7D32),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        _PriceMetaRow(
-                                          title: 'সর্বোচ্চ দাম',
-                                          value: _formatCurrency(
-                                            entry.maxPrice,
-                                          ),
-                                          icon: _trendIcon(entry.trend),
-                                          color: _trendColor(entry.trend),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Container(
-                                          width: double.infinity,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 12,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF7B625),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              const Text(
-                                                'প্রতি গড় দাম',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w800,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '৳${_formatCurrency(entry.avgPrice)}',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w900,
-                                                  fontSize: isCompactMobile
-                                                      ? 30
-                                                      : 34,
-                                                  height: 1,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 3),
-                                              Text(
-                                                'প্রতি ${entry.unit}',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 6,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFF2F8BE8),
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                            child: Text(
-                                              '🗓 আপডেট: ${_formatDate(entry.updatedAt)}',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
+                          return _buildPriceCard(_filteredEntries[i]);
                         },
-                      );
-                    },
-                  ),
-                ],
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -646,55 +931,6 @@ class _BuyerPageTitle extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.w900,
               color: Color(0xFF1B5E20),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PriceMetaRow extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _PriceMetaRow({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF5ED),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Color(0xFF4B5563),
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            '৳$value',
-            style: const TextStyle(
-              color: Color(0xFF6B7280),
-              fontWeight: FontWeight.w700,
-              fontSize: 20,
             ),
           ),
         ],

@@ -23,7 +23,8 @@ class _FarmerPostCropPageState extends State<FarmerPostCropPage> {
   final _priceController = TextEditingController();
   final _locationController = TextEditingController();
   final _descController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _emergencyController = TextEditingController();
+  final _whatsappImoController = TextEditingController();
   String _unit = 'কেজি';
   String? _selectedCrop;
   bool _isLoading = false;
@@ -58,7 +59,8 @@ class _FarmerPostCropPageState extends State<FarmerPostCropPage> {
     _priceController.dispose();
     _locationController.dispose();
     _descController.dispose();
-    _phoneController.dispose();
+    _emergencyController.dispose();
+    _whatsappImoController.dispose();
     super.dispose();
   }
 
@@ -78,7 +80,9 @@ class _FarmerPostCropPageState extends State<FarmerPostCropPage> {
       await FirebaseFirestore.instance.collection('crops').add({
         'farmerId': widget.uid,
         'farmerName': widget.farmerName,
-        'farmerPhone': _phoneController.text.trim(),
+        'farmerPhone': _emergencyController.text.trim(),
+        'emergencyPhone': _emergencyController.text.trim(),
+        'whatsappImo': _whatsappImoController.text.trim(),
         'cropName': _selectedCrop,
         'quantity': double.tryParse(_quantityController.text) ?? 0,
         'unit': _unit,
@@ -114,7 +118,8 @@ class _FarmerPostCropPageState extends State<FarmerPostCropPage> {
       _priceController.clear();
       _locationController.clear();
       _descController.clear();
-      _phoneController.clear();
+      _emergencyController.clear();
+      _whatsappImoController.clear();
       _formKey.currentState!.reset();
     } catch (e) {
       if (!mounted) return;
@@ -175,13 +180,27 @@ class _FarmerPostCropPageState extends State<FarmerPostCropPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.22),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFF1B5E20).withOpacity(0.55),
+                        const Color(0xFF2E7D32).withOpacity(0.45),
+                        const Color(0xFFB45309).withOpacity(0.30),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withOpacity(0.5)),
+                    border: Border.all(color: Colors.white.withOpacity(0.8)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
+                        color: Colors.black.withOpacity(0.22),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                      BoxShadow(
+                        color: const Color(0xFFF59E0B).withOpacity(0.15),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
                       ),
                     ],
                   ),
@@ -247,17 +266,31 @@ class _FarmerPostCropPageState extends State<FarmerPostCropPage> {
                 // ─── Form Card ─────────────────────────────────────
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.28),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFF0F5A2A).withOpacity(0.78),
+                        const Color(0xFF2E7D32).withOpacity(0.68),
+                        const Color(0xFF0F766E).withOpacity(0.55),
+                        const Color(0xFF1E40AF).withOpacity(0.30),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.55),
+                      color: Colors.white.withOpacity(0.88),
                       width: 1.2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
+                        color: Colors.black.withOpacity(0.32),
+                        blurRadius: 28,
+                        offset: const Offset(0, 10),
+                      ),
+                      BoxShadow(
+                        color: const Color(0xFF22C55E).withOpacity(0.18),
+                        blurRadius: 30,
+                        offset: const Offset(0, 14),
                       ),
                     ],
                   ),
@@ -380,24 +413,30 @@ class _FarmerPostCropPageState extends State<FarmerPostCropPage> {
                           ),
                           const SizedBox(height: 14),
 
-                          // Phone
-                          _label(Icons.phone, 'যোগাযোগের নম্বর'),
+                          _label(Icons.local_hospital, 'জরুরি নম্বর'),
                           const SizedBox(height: 6),
                           TextFormField(
-                            controller: _phoneController,
+                            controller: _emergencyController,
                             keyboardType: TextInputType.phone,
                             style: const TextStyle(color: Colors.white),
                             decoration: _dec(hint: '01XXXXXXXXX'),
                             validator: (v) =>
                                 (v == null || v.isEmpty) ? 'নম্বর লিখুন' : null,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'খালি রাখলে আপনার রেজিস্টার করা নম্বর ব্যবহার হবে',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white.withOpacity(0.65),
-                            ),
+                          const SizedBox(height: 12),
+
+                          _label(
+                            Icons.chat_bubble_outline,
+                            'WhatsApp/IMO নম্বর',
+                          ),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _whatsappImoController,
+                            keyboardType: TextInputType.phone,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _dec(hint: '01XXXXXXXXX'),
+                            validator: (v) =>
+                                (v == null || v.isEmpty) ? 'নম্বর লিখুন' : null,
                           ),
                           const SizedBox(height: 14),
 
@@ -579,7 +618,7 @@ class _FarmerPostCropPageState extends State<FarmerPostCropPage> {
         borderSide: const BorderSide(color: Colors.white, width: 1.5),
       ),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.15),
+      fillColor: Colors.white.withOpacity(0.22),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
   }

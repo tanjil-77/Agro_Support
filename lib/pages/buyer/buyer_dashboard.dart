@@ -6,6 +6,7 @@ import '../app_settings.dart';
 import '../login.dart';
 import 'buyer_price.dart';
 import 'buyer_shared_widgets.dart';
+import 'buyer_weather.dart';
 
 class BuyerDashboard extends StatefulWidget {
   final String uid;
@@ -23,6 +24,7 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
   final List<_BNavItem> _navItems = const [
     _BNavItem(icon: Icons.shopping_cart, label: 'মার্কেটপ্লেস'),
     _BNavItem(icon: Icons.trending_up, label: 'ফসলের দাম'),
+    _BNavItem(icon: Icons.cloud, label: 'আবহাওয়া'),
   ];
 
   Widget _buildPage(AppSettingsData settings) {
@@ -34,6 +36,8 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
         );
       case 1:
         return const BuyerPricePage();
+      case 2:
+        return const BuyerWeatherPage();
       default:
         return BuyerMarketplacePage(
           name: widget.name,
