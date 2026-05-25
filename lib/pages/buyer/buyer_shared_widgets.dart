@@ -319,10 +319,10 @@ class BuyerCropCard extends StatelessWidget {
     final phone = data['farmerPhone'] ?? '';
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: const Color(0x9FEAF3FF),
+      color: const Color(0xE6EAF3FF),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 3,
-      shadowColor: const Color(0x33274B7A),
+      shadowColor: const Color(0x55274B7A),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -446,10 +446,10 @@ class BuyerCropCard extends StatelessWidget {
                             width: double.infinity,
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0x7AF4FAFF),
+                              color: const Color(0xDDF4FAFF),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: const Color(0x66BCD7EE),
+                                color: const Color(0x99BCD7EE),
                               ),
                             ),
                             child: Text(

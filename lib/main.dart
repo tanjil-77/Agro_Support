@@ -50,25 +50,12 @@ class MyApp extends StatelessWidget {
               child: child ?? const SizedBox.shrink(),
             );
           },
-          theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true)
-              .copyWith(
-                textTheme: ThemeData(
-                  primarySwatch: Colors.green,
-                  useMaterial3: true,
-                ).textTheme.apply(fontSizeFactor: settings.fontScale),
-              ),
-          darkTheme:
-              ThemeData(
-                useMaterial3: true,
-                brightness: Brightness.dark,
-                colorSchemeSeed: Colors.green,
-              ).copyWith(
-                textTheme: ThemeData(
-                  useMaterial3: true,
-                  brightness: Brightness.dark,
-                  colorSchemeSeed: Colors.green,
-                ).textTheme.apply(fontSizeFactor: settings.fontScale),
-              ),
+          theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            colorSchemeSeed: Colors.green,
+          ),
           home: const _Preloader(),
           debugShowCheckedModeBanner: false,
         );

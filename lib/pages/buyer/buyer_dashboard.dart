@@ -264,8 +264,8 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withOpacity(0.03),
                           Colors.black.withOpacity(0.10),
+                          Colors.black.withOpacity(0.22),
                         ],
                       ),
                     ),
@@ -500,14 +500,14 @@ class _BuyerMarketplacePageState extends State<BuyerMarketplacePage> {
           style: const TextStyle(color: Color(0xFF0E3966), fontSize: 13),
           decoration: InputDecoration(
             hintText: 'ফসল লিখুন',
-            hintStyle: const TextStyle(color: Color(0xCC3B5E84), fontSize: 13),
+            hintStyle: const TextStyle(color: Color(0xFF335B82), fontSize: 13),
             prefixIcon: const Icon(
               Icons.grass,
-              color: Color(0xCC3B5E84),
+              color: Color(0xFF335B82),
               size: 18,
             ),
             filled: true,
-            fillColor: const Color(0x78EAF3FF),
+            fillColor: const Color(0xDDEAF3FF),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 10,
               vertical: 8,
@@ -571,14 +571,14 @@ class _BuyerMarketplacePageState extends State<BuyerMarketplacePage> {
           style: const TextStyle(color: Color(0xFF0E3966), fontSize: 13),
           decoration: InputDecoration(
             hintText: 'জেলা লিখুন',
-            hintStyle: const TextStyle(color: Color(0xCC3B5E84), fontSize: 13),
+            hintStyle: const TextStyle(color: Color(0xFF335B82), fontSize: 13),
             prefixIcon: const Icon(
               Icons.location_on,
-              color: Color(0xCC3B5E84),
+              color: Color(0xFF335B82),
               size: 18,
             ),
             filled: true,
-            fillColor: const Color(0x78EAF3FF),
+            fillColor: const Color(0xDDEAF3FF),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 10,
               vertical: 8,
@@ -633,13 +633,13 @@ class _BuyerMarketplacePageState extends State<BuyerMarketplacePage> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [const Color(0x66E3F0FD), const Color(0x52CFE3F7)],
+              colors: [const Color(0xB3E3F0FD), const Color(0x99CFE3F7)],
             ),
             border: const Border(
-              bottom: BorderSide(color: Color(0x66B5CBE3), width: 0.9),
+              bottom: BorderSide(color: Color(0x99B5CBE3), width: 0.9),
             ),
             boxShadow: const [
-              BoxShadow(color: Color(0x1F103E68), blurRadius: 8),
+              BoxShadow(color: Color(0x33103E68), blurRadius: 8),
             ],
           ),
           child: Column(
@@ -723,15 +723,15 @@ class _BuyerMarketplacePageState extends State<BuyerMarketplacePage> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF6F8ED8).withOpacity(0.15),
-                const Color(0xFF48A1DB).withOpacity(0.12),
+                const Color(0xFF6F8ED8).withOpacity(0.32),
+                const Color(0xFF48A1DB).withOpacity(0.28),
               ],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0x55CCE0F5), width: 1.0),
+            border: Border.all(color: const Color(0x88B8D3EA), width: 1.0),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x1F243D63),
+                color: Color(0x33243D63),
                 blurRadius: 8,
                 offset: Offset(0, 4),
               ),
@@ -793,7 +793,7 @@ class _BuyerMarketplacePageState extends State<BuyerMarketplacePage> {
                       _locationController.clear();
                     }),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0x8FD7E6F7),
+                      backgroundColor: const Color(0xBFD7E6F7),
                       foregroundColor: const Color(0xFF0D4A7A),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),

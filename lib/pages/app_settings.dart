@@ -1,8 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'login.dart';
 
 class AppSettingsData {
   const AppSettingsData({
@@ -146,6 +147,16 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
     await _store.update(data);
   }
 
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
+  }
+
   Future<void> _openUrl(String url) async {
     final launched = await launchUrl(
       Uri.parse(url),
@@ -204,35 +215,23 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                     child: Column(
                       children: [
                         _section(
-                          title: bn ? 'দ্রুত অ্যাকশন' : 'Quick Actions',
-                          icon: Icons.manage_accounts,
+                          title: bn ? 'অ্যাকাউন্ট' : 'Account',
+                          icon: Icons.person_rounded,
                           child: Column(
                             children: [
-                              _actionTile(
-                                icon: Icons.login_rounded,
-                                title: bn ? 'লগইন' : 'Login',
-                                subtitle: bn
-                                    ? 'লগইন স্ক্রিনে যান'
-                                    : 'Open login screen',
-                                onTap: () => Navigator.pop(context),
-                              ),
-                              _actionTile(
-                                icon: Icons.person_add_alt_1_rounded,
-                                title: bn ? 'রেজিস্টার' : 'Register',
-                                subtitle: bn
-                                    ? 'রেজিস্টার স্ক্রিনে যান'
-                                    : 'Open register screen',
-                                onTap: () => Navigator.pop(context),
-                              ),
-                              _actionTile(
-                                icon: Icons.info_outline_rounded,
-                                title: bn ? 'আমাদের সম্পর্কে' : 'About Us',
-                                subtitle: bn
-                                    ? 'অ্যাপ সম্পর্কিত তথ্য'
-                                    : 'App details',
-                                onTap: () => _snack(
-                                  bn ? 'About section' : 'About section',
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(
+                                  Icons.logout,
+                                  color: Colors.red,
                                 ),
+                                title: Text(bn ? 'লগআউট' : 'Logout'),
+                                subtitle: Text(
+                                  bn
+                                      ? 'অ্যাকাউন্ট থেকে সাইন আউট করুন'
+                                      : 'Sign out of your account',
+                                ),
+                                onTap: _logout,
                               ),
                             ],
                           ),
@@ -245,36 +244,6 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                           icon: Icons.tune_rounded,
                           child: Column(
                             children: [
-                              _switchTile(
-                                title: bn ? 'নোটিফিকেশন' : 'Notifications',
-                                subtitle: bn
-                                    ? 'পুশ নোটিফিকেশন চালু/বন্ধ'
-                                    : 'Turn push notifications on/off',
-                                value: settings.notificationsEnabled,
-                                onChanged: (v) => _save(
-                                  settings.copyWith(notificationsEnabled: v),
-                                ),
-                              ),
-                              _switchTile(
-                                title: bn ? 'ডার্ক মোড' : 'Dark Mode',
-                                subtitle: bn
-                                    ? 'পুরো অ্যাপের থিম বদলান'
-                                    : 'Change the app theme',
-                                value: settings.darkModeEnabled,
-                                onChanged: (v) => _save(
-                                  settings.copyWith(darkModeEnabled: v),
-                                ),
-                              ),
-                              _switchTile(
-                                title: bn ? 'অটো লোকেশন' : 'Auto Location',
-                                subtitle: bn
-                                    ? 'লোকেশন ব্যবহার করে কাছের তথ্য দেখান'
-                                    : 'Use location for nearby data',
-                                value: settings.autoLocationEnabled,
-                                onChanged: (v) => _save(
-                                  settings.copyWith(autoLocationEnabled: v),
-                                ),
-                              ),
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
                                 leading: const Icon(Icons.language),
@@ -329,6 +298,36 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                                       ? 'বর্তমান: ${(settings.fontScale * 100).round()}%'
                                       : 'Current: ${(settings.fontScale * 100).round()}%',
                                   style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ),
+                              _switchTile(
+                                title: bn ? 'নোটিফিকেশন' : 'Notifications',
+                                subtitle: bn
+                                    ? 'পুশ নোটিফিকেশন চালু/বন্ধ'
+                                    : 'Turn push notifications on/off',
+                                value: settings.notificationsEnabled,
+                                onChanged: (v) => _save(
+                                  settings.copyWith(notificationsEnabled: v),
+                                ),
+                              ),
+                              _switchTile(
+                                title: bn ? 'ডার্ক মোড' : 'Dark Mode',
+                                subtitle: bn
+                                    ? 'পুরো অ্যাপের থিম বদলান'
+                                    : 'Change the app theme',
+                                value: settings.darkModeEnabled,
+                                onChanged: (v) => _save(
+                                  settings.copyWith(darkModeEnabled: v),
+                                ),
+                              ),
+                              _switchTile(
+                                title: bn ? 'অটো লোকেশন' : 'Auto Location',
+                                subtitle: bn
+                                    ? 'লোকেশন ব্যবহার করে কাছের তথ্য দেখান'
+                                    : 'Use location for nearby data',
+                                value: settings.autoLocationEnabled,
+                                onChanged: (v) => _save(
+                                  settings.copyWith(autoLocationEnabled: v),
                                 ),
                               ),
                             ],
@@ -420,24 +419,6 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                                 onTap: () => _openUrl('tel:+8801700000000'),
                               ),
                             ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () => _snack(
-                              bn ? 'সেটিংস সেভ হয়েছে' : 'Settings saved',
-                            ),
-                            icon: const Icon(Icons.save_rounded),
-                            label: Text(
-                              bn ? 'সব সেটিংস সেভ করুন' : 'Save All Settings',
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2E7D32),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
                           ),
                         ),
                       ],

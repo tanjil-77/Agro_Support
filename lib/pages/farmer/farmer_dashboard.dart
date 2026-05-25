@@ -62,6 +62,59 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
     );
   }
 
+  void _showLogoutSheet(BuildContext context, bool isBn) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 32,
+              backgroundColor: const Color(0xFF1B5E20).withOpacity(0.15),
+              child: const Icon(
+                Icons.person,
+                color: Color(0xFF1B5E20),
+                size: 36,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              widget.name,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              isBn ? 'কৃষক অ্যাকাউন্ট' : 'Farmer account',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _logout();
+              },
+              icon: const Icon(Icons.logout),
+              label: Text(isBn ? 'লগআউট' : 'Logout'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _page() {
     switch (_selectedIndex) {
       case 0:
@@ -124,7 +177,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                   tooltip: isBn ? 'প্রোফাইল মেনু' : 'Profile menu',
                   onSelected: (value) {
                     if (value == 'logout') {
-                      _logout();
+                      _showLogoutSheet(context, isBn);
                     }
                   },
                   itemBuilder: (context) => [
@@ -193,26 +246,96 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
               child: SafeArea(
                 child: Column(
                   children: [
-                    ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person)),
-                      title: Text(
-                        widget.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                       ),
-                      subtitle: Text(
-                        isBn ? 'কৃষক অ্যাকাউন্ট' : 'Farmer account',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundColor: Colors.white.withOpacity(0.25),
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 36,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            widget.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFC107),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              isBn ? 'কৃষক' : 'Farmer',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const Divider(height: 1),
                     Expanded(
                       child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                         itemCount: _items.length,
                         itemBuilder: (context, index) {
                           final item = _items[index];
+                          final isSelected = _selectedIndex == index;
                           return ListTile(
-                            selected: _selectedIndex == index,
-                            leading: Icon(item.icon),
-                            title: Text(item.label),
+                            selected: isSelected,
+                            selectedTileColor: const Color(
+                              0xFF1B5E20,
+                            ).withOpacity(0.10),
+                            leading: Icon(
+                              item.icon,
+                              color: isSelected
+                                  ? const Color(0xFF1B5E20)
+                                  : Colors.grey.shade600,
+                            ),
+                            title: Text(
+                              item.label,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? const Color(0xFF1B5E20)
+                                    : const Color(0xFF333333),
+                                fontWeight: isSelected
+                                    ? FontWeight.w800
+                                    : FontWeight.w500,
+                                fontSize: 15,
+                              ),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 2,
+                            ),
                             onTap: () {
                               _navigate(index);
                               Navigator.pop(context);
@@ -221,6 +344,26 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                         },
                       ),
                     ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.logout, color: Colors.red),
+                      title: Text(
+                        isBn ? 'লগআউট' : 'Logout',
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        if (!mounted) return;
+                        _showLogoutSheet(this.context, isBn);
+                      },
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),
